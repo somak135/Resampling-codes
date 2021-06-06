@@ -13,7 +13,7 @@ sigma_e = 0.05
 ### define paramters for Theta_i
 library(MASS)
 
-theta = c(4, 3, 5, 3)
+theta = c(4, 3, 5, 5)
 Sigma = matrix(c(0.75, -.27, .092, -.21, -.27, .86, 
                  .15, .049, .092, .15, .75, -.071, 
                  -.21, .049, -0.071, .24), nrow = q)
