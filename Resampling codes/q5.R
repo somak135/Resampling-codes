@@ -181,12 +181,12 @@ report_mean_matrix = matrix(nrow = m, ncol = 3)
 report_sd_matrix = matrix(nrow = m, ncol = 3)
 
 for(j in 1:m) {
-  report_mean_matrix[j, 1] = mean(v_jack[, j])
-  report_mean_matrix[j, 2] = mean(v_boot[, j])
-  report_mean_matrix[j, 3] = mean(v_L[, j])
-  report_sd_matrix[j, 1] = sd(v_jack[, j])
-  report_sd_matrix[j, 2] = sd(v_boot[, j])
-  report_sd_matrix[j, 3] = mean(v_L[, j])
+  report_mean_matrix[j, 1] = mean(sqrt(v_jack[, j]))
+  report_mean_matrix[j, 2] = mean(sqrt(v_boot[, j]))
+  report_mean_matrix[j, 3] = mean(sqrt(v_L[, j]))
+  report_sd_matrix[j, 1] = sd(sqrt(v_jack[, j]))
+  report_sd_matrix[j, 2] = sd(sqrt(v_boot[, j]))
+  report_sd_matrix[j, 3] = mean(sqrt(v_L[, j]))
 }
 
 report_mean_matrix
