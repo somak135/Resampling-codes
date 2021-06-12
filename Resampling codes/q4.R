@@ -1,3 +1,6 @@
+#install.packages("beepr")
+library(beepr)
+
 generate<-function(n = 100, g1 = 8, g2 = 0.25, b1 = 0.1, b2 = -0.4, sigma = 0.005) {
   x2 = rbinom(n,1,0.3) #urbanization category (1: urban, 0: rural)
   par = (3*x2) + (5*(1-x2))
@@ -76,11 +79,8 @@ for(i in 1:N) {
   v2[i]=sqrt(vboot(dat))
 }
 
+
+print(paste0("ME-jack: ", mean(v1), ", SD-jack: ", sd(v1), 
+             ", ME-boot: ", mean(v2), ", SD-boot: ", sd(v2)))
 beep(4)
-
-mean(v1)
-mean(v2)
-sd(v1)
-sd(v2)
-
 

@@ -1,3 +1,4 @@
+##### Defining global things
 ### define Z(t) as function of t
 
 q = 4
@@ -9,6 +10,9 @@ Z = function(t) {
 }
 
 sigma_e = 0.05
+
+### declare cutoff
+eta = 20
 
 ### define paramters for Theta_i
 library(MASS)
@@ -33,9 +37,6 @@ Simu = function(n, m, q, theta, Sigma, sigma_e) {
   mylist = list("data" = Datmat)
   return(mylist)
 }
-
-### declare cutoff
-eta = 20
 
 #### Estimation of R-hat(t)
 
@@ -90,42 +91,106 @@ Estim = function(n, m, q, S, Z, T) {
     Rt = c(Rt, pnorm(x))
   }
   
-  mylist = list("theta_hat" = theta_hat, "sigma_e2_hat" = sigma_e2_hat, "Sigma_Theta" = Sigma_Theta, "Rt" = Rt)
+  mylist = list("theta_hat" = theta_hat, "sigma_e2_hat" = sigma_e2_hat,
+                "Sigma_Theta_hat" = Sigma_Theta, "Rt" = Rt)
   return(mylist)
   
 }
 
 
-########RUN
-set.seed(1)
-S = Simu(n,m,q,theta, Sigma, sigma_e)$data
-#result = Estim(n,m,q,S,Z,T)
-#result
-#is.positive.definite(result$Sigma_Theta)
-
 #### Now that we are done with Simulation and Estimation, lets jump into Jackknife and Bootstrap!
 
-
-###### JACKKNIFE ############
-Jmat = matrix(nrow = n, ncol = m)
-for(i in 1:n) {
-  S_new = S[, -i]
-  result = Estim((n-1), m, q, S_new, Z, T)
-  Jmat[i, ] = result$Rt
+vjack = function(n, m, S) {
+  Jmat = matrix(nrow = n, ncol = m)
+  for(i in 1:n) {
+    S_new = S[, -i]
+    result = Estim((n-1), m, q, S_new, Z, T)
+    Jmat[i, ] = result$Rt
+  }
+  return(((n-1)^2/n) * diag(var(Jmat)))
 }
 
-v_jack = ((n-1)^2/n) * var(Jmat) ####TAA_DAA
-
-
-
-
-###### BOOTSTRAP ############
-B = 100
-Bmat = matrix(nrow = B, ncol = m)
-for(b in 1:B) {
-  S_new = S[ , sample(n, n, replace = TRUE)]
-  result = Estim(n, m, q, S_new, Z, T)
-  Bmat[b, ] = result$Rt
+vboot = function(B = 200, m, S) {
+  Bmat = matrix(nrow = B, ncol = m)
+  for(b in 1:B) {
+    S_new = S[ , sample(n, n, replace = TRUE)]
+    result = Estim(n, m, q, S_new, Z, T)
+    Bmat[b, ] = result$Rt
+  }
+  return(((B-1)/B) * diag(var(Bmat)))
 }
 
-v_boot = var(Bmat) ####TAA-DAA
+### repeating Jackknife and Bootstrap multiple times
+N = 100; v_jack = c(); v_boot = c()
+for(i in 1:N) {
+  set.seed(i)
+  S = Simu(n,m,q,theta, Sigma, sigma_e)$data
+  v_jack = rbind(v_jack, vjack(n, m, S))
+  v_boot = rbind(v_boot, vboot(B, m, S))
+}
+
+
+##### Now trying to find the tedious one -- the linear estimate
+
+gradg = function(x1, x2, x3, i) {
+  d = x2 - x1^2 - x3*(t(Zmat[i, ])%*%(solve(t(Zmat)%*%Zmat))%*%Zmat[i,])
+  g1 = dnorm((x1 - eta)/sqrt(d)) * (sqrt(d) + (x1 - eta)*x1/sqrt(d))/d
+  g2 = dnorm((x1 - eta)/sqrt(d)) * (-0.5*(x1 - eta)/sqrt(d))/d
+  g3 = dnorm((x1 - eta)/sqrt(d)) * 
+    (0.5*(x1 - eta)*(t(Zmat[i, ])%*%(solve(t(Zmat)%*%Zmat))%*%Zmat[i,])/sqrt(d))/d
+  
+  return(c(g1, g2, g3))
+}
+
+N = 100; v_L = c()
+Zmat = matrix(nrow = m, ncol = q)
+for(i in 1:m){
+  Zmat[i, ] = Z(T[i])
+}
+for(i in 1:N) {
+  set.seed(i)
+  S = Simu(n,m,q,theta, Sigma, sigma_e)$data
+  M=solve(t(Zmat)%*%Zmat)
+  K=Zmat%*%M%*%t(Zmat)
+  v_linear = c()
+  for(t in 1:m) {
+    P=t(Zmat[t, ])%*%M%*%t(Zmat)
+    f1<-function(v)
+    {
+      return(P%*%v)
+    }
+    x1=apply(S, 2, f1)
+    x2=x1^2
+    f2<-function(v)
+    {
+      return(t(v)%*%v-t(v)%*%K%*%v)
+    }
+    x3=apply(S, 2, f2)/(m-q)
+    X=cbind(x1, x2, x3)
+    Sigma_hat_X=var(X)
+    u=colMeans(X)
+    
+    g=gradg(u[1],u[2],u[3], t)
+    v=(t(g)%*%Sigma_hat_X%*%g)/n
+    v_linear = c(v_linear, v)
+  }
+  v_L = rbind(v_L, v_linear)
+}
+
+report_mean_matrix = matrix(nrow = m, ncol = 3)
+report_sd_matrix = matrix(nrow = m, ncol = 3)
+
+for(j in 1:m) {
+  report_mean_matrix[j, 1] = mean(v_jack[, j])
+  report_mean_matrix[j, 2] = mean(v_boot[, j])
+  report_mean_matrix[j, 3] = mean(v_L[, j])
+  report_sd_matrix[j, 1] = sd(v_jack[, j])
+  report_sd_matrix[j, 2] = sd(v_boot[, j])
+  report_sd_matrix[j, 3] = mean(v_L[, j])
+}
+
+report_mean_matrix
+report_sd_matrix
+
+library(beepr)
+beep(4)
