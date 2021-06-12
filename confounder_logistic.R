@@ -1,3 +1,7 @@
+## p11 = baseline conversion in absence of confounder, p12 = baseline conversion in presence of confounder
+## pz = confounder proportion in population, px = proportion of sample receiving exposure to x
+## p2 = minimum detectable conversion ration (after exposure x)
+
 func1 = function(alpha, powr, p11, p12, pz, p2, px) {
   A = p11/(1-p11)
   G = (p12/(1-p12)) / (p11/(1-p11))
