@@ -186,7 +186,7 @@ for(j in 1:m) {
   report_mean_matrix[j, 3] = mean(sqrt(v_L[, j]))
   report_sd_matrix[j, 1] = sd(sqrt(v_jack[, j]))
   report_sd_matrix[j, 2] = sd(sqrt(v_boot[, j]))
-  report_sd_matrix[j, 3] = mean(sqrt(v_L[, j]))
+  report_sd_matrix[j, 3] = sd(sqrt(v_L[, j]))
 }
 
 report_mean_matrix
