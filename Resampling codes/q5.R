@@ -121,7 +121,7 @@ vboot = function(B = 200, m, S) {
 }
 
 ### repeating Jackknife and Bootstrap multiple times
-N = 100; v_jack = c(); v_boot = c()
+N = 100; v_jack = c(); v_boot = c(); B = 2*n
 for(i in 1:N) {
   set.seed(i)
   S = Simu(n,m,q,theta, Sigma, sigma_e)$data
