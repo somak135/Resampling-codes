@@ -1,7 +1,7 @@
 #install.packages("beepr")
 library(beepr)
 
-generate<-function(n = 100, g1 = 8, g2 = 0.25, b1 = 0.1, b2 = -0.4, sigma = 0.005) {
+generate<-function(n = 1000, g1 = 8, g2 = 0.25, b1 = 0.1, b2 = -0.4, sigma = 0.005) {
   x2 = rbinom(n,1,0.3) #urbanization category (1: urban, 0: rural)
   par = (3*x2) + (5*(1-x2))
   x1  = sapply(par, function(x){1+rpois(1,x)}) #family size
